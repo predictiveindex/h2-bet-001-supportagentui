@@ -4,7 +4,7 @@ WORKDIR /web
 COPY src/SupportAgent.Web/package*.json ./
 RUN npm ci
 COPY src/SupportAgent.Web/ ./
-RUN npm run build
+RUN node node_modules/vite/bin/vite.js build
 
 # Stage 2 — Publish .NET app
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS api-build
