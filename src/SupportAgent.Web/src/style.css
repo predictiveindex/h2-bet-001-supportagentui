@@ -1,0 +1,30 @@
+:root {
+  --bg:      #06010F;
+  --bg2:     #130520;
+  --bg3:     #1a0830;
+  --border:  #2d1a4a;
+  --text:    #F8F0FF;
+  --muted:   #a89fc0;
+  --accent:  #7C3AED;
+  --accent2: #80FFDB;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #app {
+  height: 100%;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { text-decoration: none; color: inherit; }
+
+h1, h2, h3, .brand {
+  font-family: 'Outfit', system-ui, sans-serif;
+}
