@@ -63,6 +63,7 @@ module containerApp 'modules/containerApp.bicep' = {
     acrLoginServer: acr.properties.loginServer
     imageTag: imageTag
     identityResourceId: identity.id
+    identityClientId: identity.properties.clientId
   }
 }
 

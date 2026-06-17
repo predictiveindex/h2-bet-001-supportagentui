@@ -16,6 +16,9 @@ param imageTag string
 @description('Resource ID of the user-assigned managed identity')
 param identityResourceId string
 
+@description('Client ID of the user-assigned managed identity (passed as AZURE_CLIENT_ID env var)')
+param identityClientId string
+
 // ── Container App ─────────────────────────────────────────────────────────────
 
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
@@ -52,6 +55,12 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             cpu: json('0.5')
             memory: '1Gi'
           }
+          env: [
+            {
+              name: 'AZURE_CLIENT_ID'
+              value: identityClientId
+            }
+          ]
         }
       ]
       scale: {
