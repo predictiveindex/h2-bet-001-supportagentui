@@ -3,7 +3,6 @@ using SupportAgent.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddHttpClient<AgentService>();
 builder.Services.AddSingleton<AgentService>();
 builder.Services.AddCors(options =>
     options.AddDefaultPolicy(policy =>
@@ -19,8 +18,8 @@ app.UseStaticFiles();
 
 app.MapPost("/api/chat", async (ChatRequest request, AgentService agentService) =>
 {
-    var reply = await agentService.SendAsync(request.Messages);
-    return Results.Ok(new ChatResponse(reply));
+    var (reply, responseId) = await agentService.SendAsync(request.Message, request.PreviousResponseId);
+    return Results.Ok(new ChatResponse(reply, responseId));
 });
 
 // SPA fallback — serve index.html for all non-API routes

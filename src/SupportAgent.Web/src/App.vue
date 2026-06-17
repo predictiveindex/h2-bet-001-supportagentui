@@ -24,9 +24,11 @@ import ChatInput from './components/ChatInput.vue'
 
 const messages = ref([])
 const loading = ref(false)
+const previousResponseId = ref(null)
 
 function newChat() {
   messages.value = []
+  previousResponseId.value = null
 }
 
 async function sendMessage(text) {
@@ -39,11 +41,15 @@ async function sendMessage(text) {
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: messages.value }),
+      body: JSON.stringify({
+        message: text,
+        previousResponseId: previousResponseId.value,
+      }),
     })
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const data = await res.json()
+    previousResponseId.value = data.responseId
     messages.value.push({ role: 'assistant', content: data.reply })
   } catch (err) {
     messages.value.push({

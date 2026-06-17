@@ -1,78 +1,40 @@
-using Azure.Core;
+using Azure.AI.Projects;
+using Azure.AI.Extensions.OpenAI;
 using Azure.Identity;
+using OpenAI.Responses;
 using SupportAgent.Api.Models;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+
+#pragma warning disable OPENAI001
 
 namespace SupportAgent.Api.Services;
 
 public class AgentService
 {
-    private const string FoundryEndpoint =
-        "https://H2-Experiments.services.ai.azure.com/api/projects/H2-BET-001/agents/SupportAgent/endpoint/protocols/openai/responses";
+    private const string ProjectEndpoint = "https://h2-experiments.services.ai.azure.com/api/projects/H2-BET-001";
+    private const string AgentName = "SupportAgent";
 
-    private const string TokenScope = "https://cognitiveservices.azure.com/.default";
+    private readonly ProjectResponsesClient _client;
 
-    private readonly HttpClient _httpClient;
-    private readonly TokenCredential _credential;
-
-    public AgentService(HttpClient httpClient)
+    public AgentService()
     {
-        _httpClient = httpClient;
-        _credential = new DefaultAzureCredential();
+        var projectClient = new AIProjectClient(new Uri(ProjectEndpoint), new DefaultAzureCredential());
+        var agentRef = new AgentReference(name: AgentName);
+        _client = projectClient.OpenAI.GetProjectResponsesClientForAgent(agentRef);
     }
 
-    public async Task<string> SendAsync(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken = default)
+    public async Task<(string Reply, string ResponseId)> SendAsync(
+        string userMessage,
+        string? previousResponseId = null,
+        CancellationToken cancellationToken = default)
     {
-        var token = await _credential.GetTokenAsync(
-            new TokenRequestContext([TokenScope]),
-            cancellationToken);
+        CreateResponseOptions options = new()
+        {
+            InputItems = { ResponseItem.CreateUserMessageItem(userMessage) }
+        };
+        if (previousResponseId is not null)
+            options.PreviousResponseId = previousResponseId;
 
-        var payload = new FoundryRequest(
-            Input: messages.Select(m => new FoundryMessage(m.Role, m.Content)).ToArray());
-
-        var json = JsonSerializer.Serialize(payload, FoundryJsonContext.Default.FoundryRequest);
-        using var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-        using var request = new HttpRequestMessage(HttpMethod.Post, FoundryEndpoint) { Content = content };
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
-
-        using var response = await _httpClient.SendAsync(request, cancellationToken);
-        response.EnsureSuccessStatusCode();
-
-        var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
-        var result = JsonSerializer.Deserialize(responseJson, FoundryJsonContext.Default.FoundryResponse);
-
-        return result?.Output?.FirstOrDefault(o => o.Type == "message")
-                      ?.Content?.FirstOrDefault(c => c.Type == "output_text")
-                      ?.Text
-               ?? string.Empty;
+        var result = await _client.CreateResponseAsync(options, cancellationToken);
+        return (result.Value.GetOutputText(), result.Value.Id);
     }
 }
-
-// Internal DTOs for the OpenAI Responses API wire format
-internal record FoundryRequest(
-    [property: JsonPropertyName("input")] FoundryMessage[] Input);
-
-internal record FoundryMessage(
-    [property: JsonPropertyName("role")] string Role,
-    [property: JsonPropertyName("content")] string Content);
-
-internal record FoundryResponse(
-    [property: JsonPropertyName("output")] FoundryOutputItem[]? Output);
-
-internal record FoundryOutputItem(
-    [property: JsonPropertyName("type")] string Type,
-    [property: JsonPropertyName("content")] FoundryContentItem[]? Content);
-
-internal record FoundryContentItem(
-    [property: JsonPropertyName("type")] string Type,
-    [property: JsonPropertyName("text")] string? Text);
-
-[JsonSerializable(typeof(FoundryRequest))]
-[JsonSerializable(typeof(FoundryResponse))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-internal partial class FoundryJsonContext : JsonSerializerContext { }
-
