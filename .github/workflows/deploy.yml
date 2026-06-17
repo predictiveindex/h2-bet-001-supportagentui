@@ -32,14 +32,6 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Deploy Bicep Infrastructure
-        run: |
-          az deployment group create \
-            --resource-group ${{ env.RESOURCE_GROUP }} \
-            --template-file ${{ env.BICEP_FILE }} \
-            --parameters imageTag=${{ github.sha }} \
-            --no-wait false
-
       - name: Build & Push Container Image
         run: |
           az acr build \
@@ -49,13 +41,20 @@ jobs:
             --file Dockerfile \
             .
 
-      - name: Update Container App (new revision)
+      - name: Deploy Bicep Infrastructure
+        run: |
+          az deployment group create \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --template-file ${{ env.BICEP_FILE }} \
+            --parameters imageTag=${{ github.sha }}
+
+      - name: Force new Container App revision
         run: |
           az containerapp update \
             --name ${{ env.CONTAINER_APP_NAME }} \
             --resource-group ${{ env.RESOURCE_GROUP }} \
             --image ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }} \
-            --revision-suffix "${GITHUB_SHA::8}"
+            --revision-suffix "sha-${GITHUB_SHA::8}"
 
       - name: Print Container App URL
         run: |
