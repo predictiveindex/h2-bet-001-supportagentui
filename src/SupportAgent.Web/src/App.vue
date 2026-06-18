@@ -133,9 +133,9 @@ async function handleVote(index, choice) {
 }
 
 .brand {
-  font-size: 15px;
+  font-size: 20px;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   color: var(--text);
 }
 
