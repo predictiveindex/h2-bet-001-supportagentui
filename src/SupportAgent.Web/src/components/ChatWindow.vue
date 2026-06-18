@@ -77,7 +77,7 @@ watch(() => props.loading, scrollToBottom)
 .chat-window {
   flex: 1;
   overflow-y: auto;
-  padding: 24px 16px;
+  padding: 24px 32px;
   scroll-behavior: smooth;
 }
 
@@ -125,7 +125,7 @@ watch(() => props.loading, scrollToBottom)
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-width: 900px;
+  max-width: 1400px;
   margin: 0 auto;
   width: 100%;
 }

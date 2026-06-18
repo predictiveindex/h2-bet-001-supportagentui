@@ -77,7 +77,7 @@ function autoResize() {
   display: flex;
   align-items: flex-end;
   gap: 10px;
-  max-width: 760px;
+  max-width: 1400px;
   margin: 0 auto;
   background: var(--bg3);
   border: 1px solid var(--border);
