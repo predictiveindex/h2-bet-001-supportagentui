@@ -9,8 +9,8 @@
           <path d="M12 20h16M20 12l8 8-8 8" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
-      <p class="empty-title">How can I help you today?</p>
-      <p class="empty-sub">Ask me anything — you'll see two responses to compare.</p>
+      <p class="empty-title">I am the Hatchwork company assistant — how can I help you today?</p>
+      <p class="empty-sub">I can help you with onboarding, HR, pay and benefits, product training and security training.</p>
     </div>
 
     <!-- Exchanges -->
@@ -37,11 +37,11 @@
       <!-- Typing indicator -->
       <div v-if="loading" class="ab-typing">
         <div class="typing-card">
-          <span class="label">A</span>
+          <span class="label label-a">A</span>
           <div class="dots"><span></span><span></span><span></span></div>
         </div>
         <div class="typing-card">
-          <span class="label">B</span>
+          <span class="label label-b">B</span>
           <div class="dots"><span></span><span></span><span></span></div>
         </div>
       </div>
@@ -161,12 +161,28 @@ watch(() => props.loading, scrollToBottom)
 }
 
 .typing-card .label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  color: var(--muted);
-  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 800;
+  font-family: 'Outfit', sans-serif;
   flex-shrink: 0;
+}
+
+.typing-card .label-a {
+  background: rgba(124, 58, 237, 0.25);
+  color: #c084fc;
+  border: 2px solid rgba(124, 58, 237, 0.6);
+}
+
+.typing-card .label-b {
+  background: rgba(128, 255, 219, 0.12);
+  color: var(--accent2);
+  border: 2px solid rgba(128, 255, 219, 0.4);
 }
 
 .dots {
