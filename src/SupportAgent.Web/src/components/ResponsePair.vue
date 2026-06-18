@@ -16,9 +16,7 @@
             Your pick
           </span>
         </div>
-        <div class="card-body">
-          <p v-for="(line, i) in linesA" :key="i" :class="{ 'para-gap': i > 0 }">{{ line }}</p>
-        </div>
+        <div class="card-body prose" v-html="htmlA"></div>
         <div class="card-vote">
           <button
             class="vote-btn vote-btn--a"
@@ -41,9 +39,7 @@
             Your pick
           </span>
         </div>
-        <div class="card-body">
-          <p v-for="(line, i) in linesB" :key="i" :class="{ 'para-gap': i > 0 }">{{ line }}</p>
-        </div>
+        <div class="card-body prose" v-html="htmlB"></div>
         <div class="card-vote">
           <button
             class="vote-btn vote-btn--b"
@@ -62,6 +58,8 @@
 
 <script setup>
 import { computed } from 'vue'
+import { marked } from 'marked'
+import DOMPurify from 'dompurify'
 
 const props = defineProps({
   exchange: { type: Object, required: true },
@@ -70,8 +68,12 @@ const props = defineProps({
 
 defineEmits(['vote'])
 
-const linesA = computed(() => (props.exchange.replyA ?? '').split('\n').filter(Boolean))
-const linesB = computed(() => (props.exchange.replyB ?? '').split('\n').filter(Boolean))
+function toHtml(text) {
+  return DOMPurify.sanitize(marked.parse(text ?? ''))
+}
+
+const htmlA = computed(() => toHtml(props.exchange.replyA))
+const htmlB = computed(() => toHtml(props.exchange.replyB))
 </script>
 
 <style scoped>
@@ -174,9 +176,65 @@ const linesB = computed(() => (props.exchange.replyB ?? '').split('\n').filter(B
   flex: 1;
 }
 
-.para-gap {
-  margin-top: 8px;
+/* ── Markdown prose styles ───────────── */
+.prose :deep(p) { margin: 0 0 0.6em; }
+.prose :deep(p:last-child) { margin-bottom: 0; }
+.prose :deep(h1),
+.prose :deep(h2),
+.prose :deep(h3),
+.prose :deep(h4) {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  margin: 0.8em 0 0.4em;
+  color: var(--text);
+  line-height: 1.3;
 }
+.prose :deep(h1) { font-size: 1.25em; }
+.prose :deep(h2) { font-size: 1.1em; }
+.prose :deep(h3) { font-size: 1em; }
+.prose :deep(ul),
+.prose :deep(ol) {
+  padding-left: 1.4em;
+  margin: 0.4em 0 0.6em;
+}
+.prose :deep(li) { margin-bottom: 0.25em; }
+.prose :deep(code) {
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 0.87em;
+  background: rgba(124, 58, 237, 0.15);
+  color: #c084fc;
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+}
+.prose :deep(pre) {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  overflow-x: auto;
+  margin: 0.6em 0;
+}
+.prose :deep(pre code) {
+  background: none;
+  color: var(--text);
+  padding: 0;
+  font-size: 0.85em;
+}
+.prose :deep(blockquote) {
+  border-left: 3px solid var(--accent);
+  margin: 0.6em 0;
+  padding: 0.2em 0 0.2em 1em;
+  color: var(--muted);
+  font-style: italic;
+}
+.prose :deep(strong) { color: var(--text); font-weight: 700; }
+.prose :deep(em) { color: var(--muted); }
+.prose :deep(a) { color: var(--accent2); text-decoration: underline; }
+.prose :deep(hr) { border: none; border-top: 1px solid var(--border); margin: 0.8em 0; }
+.prose :deep(table) { border-collapse: collapse; width: 100%; margin: 0.6em 0; font-size: 0.9em; }
+.prose :deep(th),
+.prose :deep(td) { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+.prose :deep(th) { background: rgba(124, 58, 237, 0.1); font-weight: 600; }
 
 /* ── Vote button (inside card) ───────── */
 .card-vote {
