@@ -22,6 +22,9 @@ param foundryAccountName string = 'H2-Experiments'
 @description('Storage account name for vote data')
 param storageAccountName string = 'sth2validatedev'
 
+@description('Existing Azure Cache for Redis name')
+param redisName string = 'redis-h2'
+
 // ── References to existing shared resources ──────────────────────────────────
 
 resource sharedEnv 'Microsoft.App/managedEnvironments@2024-03-01' existing = {
@@ -30,6 +33,10 @@ resource sharedEnv 'Microsoft.App/managedEnvironments@2024-03-01' existing = {
 
 resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
   name: acrName
+}
+
+resource redisInstance 'Microsoft.Cache/redis@2023-08-01' existing = {
+  name: redisName
 }
 
 // ── User-assigned managed identity ───────────────────────────────────────────
@@ -90,11 +97,23 @@ resource storageTableRbac 'Microsoft.Authorization/roleAssignments@2022-04-01' =
   }
 }
 
+// ── Redis: Data Owner access policy for managed identity ─────────────────────
+
+resource redisPolicyAssignment 'Microsoft.Cache/redis/accessPolicyAssignments@2023-08-01' = {
+  name: guid(redisInstance.id, identity.id, 'DataOwner')
+  parent: redisInstance
+  properties: {
+    accessPolicyName: 'Data Owner'
+    objectId: identity.properties.principalId
+    objectIdAlias: identity.name
+  }
+}
+
 // ── Container App ─────────────────────────────────────────────────────────────
 
 module containerApp 'modules/containerApp.bicep' = {
   name: 'containerApp'
-  dependsOn: [acrPullAssignment, storageTableRbac]
+  dependsOn: [acrPullAssignment, storageTableRbac, redisPolicyAssignment]
   params: {
     location: location
     containerAppName: containerAppName
@@ -104,6 +123,7 @@ module containerApp 'modules/containerApp.bicep' = {
     identityResourceId: identity.id
     identityClientId: identity.properties.clientId
     storageAccountUrl: 'https://${storageAccount.name}.table.core.windows.net'
+    redisHost: '${redisInstance.properties.hostName}'
   }
 }
 

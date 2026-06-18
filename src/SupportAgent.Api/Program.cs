@@ -1,7 +1,22 @@
+using Azure.Identity;
+using Microsoft.Azure.StackExchangeRedis;
+using StackExchange.Redis;
 using SupportAgent.Api.Models;
 using SupportAgent.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ── Redis connection (optional — RateLimitService falls back to in-memory if absent) ──
+var redisHost = builder.Configuration["Redis:Host"];
+if (!string.IsNullOrWhiteSpace(redisHost))
+{
+    var redisOptions = new ConfigurationOptions { AbortOnConnectFail = false };
+    redisOptions.EndPoints.Add(redisHost, 6380);
+    redisOptions.Ssl = true;
+    await redisOptions.ConfigureForAzureWithTokenCredentialAsync(new DefaultAzureCredential());
+    var muxer = await ConnectionMultiplexer.ConnectAsync(redisOptions);
+    builder.Services.AddSingleton<IConnectionMultiplexer>(muxer);
+}
 
 builder.Services.AddSingleton<AgentService>();
 builder.Services.AddSingleton<VoteService>();
@@ -20,7 +35,7 @@ app.UseStaticFiles();
 
 app.MapPost("/api/chat", async (ChatRequest request, AgentService agentService, RateLimitService rateLimit) =>
 {
-    if (!rateLimit.TryConsume())
+    if (!await rateLimit.TryConsumeAsync())
         return Results.Json(
             new { error = "Daily request limit reached. Please try again tomorrow." },
             statusCode: 429);
