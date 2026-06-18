@@ -11,21 +11,38 @@ namespace SupportAgent.Api.Services;
 public class AgentService
 {
     private const string ProjectEndpoint = "https://h2-experiments.services.ai.azure.com/api/projects/H2-BET-001";
-    private const string AgentName = "SupportAgent";
 
-    private readonly ProjectResponsesClient _client;
+    private readonly ProjectResponsesClient _clientA;
+    private readonly ProjectResponsesClient _clientB;
 
     public AgentService()
     {
         var projectClient = new AIProjectClient(new Uri(ProjectEndpoint), new DefaultAzureCredential());
-        var agentRef = new AgentReference(name: AgentName);
-        _client = projectClient.OpenAI.GetProjectResponsesClientForAgent(agentRef);
+        _clientA = projectClient.OpenAI.GetProjectResponsesClientForAgent(new AgentReference(name: "SupportAgent"));
+        _clientB = projectClient.OpenAI.GetProjectResponsesClientForAgent(new AgentReference(name: "VanillaSupportAgent"));
     }
 
-    public async Task<(string Reply, string ResponseId)> SendAsync(
+    public async Task<(string ReplyA, string ResponseIdA, string ReplyB, string ResponseIdB)> SendAsync(
         string userMessage,
-        string? previousResponseId = null,
+        string? previousResponseIdA = null,
+        string? previousResponseIdB = null,
         CancellationToken cancellationToken = default)
+    {
+        var taskA = CallAgentAsync(_clientA, userMessage, previousResponseIdA, cancellationToken);
+        var taskB = CallAgentAsync(_clientB, userMessage, previousResponseIdB, cancellationToken);
+
+        await Task.WhenAll(taskA, taskB);
+
+        var (replyA, responseIdA) = taskA.Result;
+        var (replyB, responseIdB) = taskB.Result;
+        return (replyA, responseIdA, replyB, responseIdB);
+    }
+
+    private static async Task<(string Reply, string ResponseId)> CallAgentAsync(
+        ProjectResponsesClient client,
+        string userMessage,
+        string? previousResponseId,
+        CancellationToken ct)
     {
         CreateResponseOptions options = new()
         {
@@ -34,7 +51,7 @@ public class AgentService
         if (previousResponseId is not null)
             options.PreviousResponseId = previousResponseId;
 
-        var result = await _client.CreateResponseAsync(options, cancellationToken);
+        var result = await client.CreateResponseAsync(options, ct);
         return (result.Value.GetOutputText(), result.Value.Id);
     }
 }

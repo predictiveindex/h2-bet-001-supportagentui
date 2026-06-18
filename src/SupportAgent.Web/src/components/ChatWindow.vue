@@ -1,7 +1,7 @@
 <template>
   <div class="chat-window" ref="windowEl">
     <!-- Empty state -->
-    <div v-if="messages.length === 0 && !loading" class="empty-state">
+    <div v-if="exchanges.length === 0 && !loading" class="empty-state">
       <div class="empty-glow"></div>
       <div class="empty-icon">
         <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
@@ -10,20 +10,40 @@
         </svg>
       </div>
       <p class="empty-title">How can I help you today?</p>
-      <p class="empty-sub">Ask me anything and I'll do my best to assist.</p>
+      <p class="empty-sub">Ask me anything — you'll see two responses to compare.</p>
     </div>
 
-    <!-- Messages -->
+    <!-- Exchanges -->
     <div v-else class="messages">
-      <MessageBubble
-        v-for="(msg, i) in messages"
-        :key="i"
-        :message="msg"
-      />
+      <template v-for="(exchange, i) in exchanges" :key="i">
+        <!-- User message -->
+        <MessageBubble :message="{ role: 'user', content: exchange.user }" />
+
+        <!-- Rate limit message -->
+        <div v-if="exchange.rateLimited" class="rate-limit-msg">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#f59e0b" stroke-width="1.5"/><path d="M8 5v3.5M8 10.5v.5" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Daily request limit reached. Please try again tomorrow.
+        </div>
+
+        <!-- A/B responses -->
+        <ResponsePair
+          v-else-if="exchange.replyA || exchange.replyB"
+          :exchange="exchange"
+          :index="i"
+          @vote="(idx, choice) => $emit('vote', idx, choice)"
+        />
+      </template>
 
       <!-- Typing indicator -->
-      <div v-if="loading" class="bubble bubble--ai bubble--typing">
-        <span></span><span></span><span></span>
+      <div v-if="loading" class="ab-typing">
+        <div class="typing-card">
+          <span class="label">A</span>
+          <div class="dots"><span></span><span></span><span></span></div>
+        </div>
+        <div class="typing-card">
+          <span class="label">B</span>
+          <div class="dots"><span></span><span></span><span></span></div>
+        </div>
       </div>
     </div>
   </div>
@@ -32,23 +52,24 @@
 <script setup>
 import { ref, watch, nextTick } from 'vue'
 import MessageBubble from './MessageBubble.vue'
+import ResponsePair from './ResponsePair.vue'
 
 const props = defineProps({
-  messages: { type: Array, required: true },
+  exchanges: { type: Array, required: true },
   loading: { type: Boolean, default: false },
 })
+
+defineEmits(['vote'])
 
 const windowEl = ref(null)
 
 function scrollToBottom() {
   nextTick(() => {
-    if (windowEl.value) {
-      windowEl.value.scrollTop = windowEl.value.scrollHeight
-    }
+    if (windowEl.value) windowEl.value.scrollTop = windowEl.value.scrollHeight
   })
 }
 
-watch(() => props.messages.length, scrollToBottom)
+watch(() => props.exchanges.length, scrollToBottom)
 watch(() => props.loading, scrollToBottom)
 </script>
 
@@ -60,16 +81,9 @@ watch(() => props.loading, scrollToBottom)
   scroll-behavior: smooth;
 }
 
-.chat-window::-webkit-scrollbar {
-  width: 4px;
-}
-.chat-window::-webkit-scrollbar-track {
-  background: transparent;
-}
-.chat-window::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 4px;
-}
+.chat-window::-webkit-scrollbar { width: 4px; }
+.chat-window::-webkit-scrollbar-track { background: transparent; }
+.chat-window::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
 /* ── Empty state ─────────────────────── */
 .empty-state {
@@ -85,37 +99,25 @@ watch(() => props.loading, scrollToBottom)
 
 .empty-glow {
   position: absolute;
-  top: 50%;
-  left: 50%;
+  top: 50%; left: 50%;
   transform: translate(-50%, -50%);
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(ellipse at center, rgba(124, 58, 237, 0.12) 0%, transparent 68%);
+  width: 400px; height: 400px;
+  background: radial-gradient(ellipse at center, rgba(124,58,237,0.12) 0%, transparent 68%);
   pointer-events: none;
 }
 
-.empty-icon {
-  margin-bottom: 20px;
-  position: relative;
-  z-index: 1;
-}
+.empty-icon { margin-bottom: 20px; position: relative; z-index: 1; }
 
 .empty-title {
   font-family: 'Outfit', sans-serif;
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 8px;
-  position: relative;
-  z-index: 1;
+  font-size: 22px; font-weight: 700;
+  color: var(--text); margin-bottom: 8px;
+  position: relative; z-index: 1;
 }
 
 .empty-sub {
-  font-size: 14px;
-  color: var(--muted);
-  max-width: 320px;
-  position: relative;
-  z-index: 1;
+  font-size: 14px; color: var(--muted);
+  max-width: 360px; position: relative; z-index: 1;
 }
 
 /* ── Messages ────────────────────────── */
@@ -123,45 +125,65 @@ watch(() => props.loading, scrollToBottom)
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-width: 760px;
+  max-width: 900px;
   margin: 0 auto;
   width: 100%;
 }
 
-/* ── Typing indicator ────────────────── */
-.bubble {
-  padding: 12px 16px;
-  border-radius: 16px;
-  max-width: 72%;
-  line-height: 1.6;
-  font-size: 15px;
-}
-
-.bubble--ai {
-  align-self: flex-start;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--accent2);
-}
-
-.bubble--typing {
+/* ── Rate limit notice ───────────────── */
+.rate-limit-msg {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 14px 18px;
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 12px;
+  color: #f59e0b;
+  font-size: 14px;
 }
 
-.bubble--typing span {
+/* ── Typing indicator ────────────────── */
+.ab-typing {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.typing-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.typing-card .label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.dots {
+  display: flex;
+  gap: 5px;
+}
+
+.dots span {
   display: inline-block;
-  width: 7px;
-  height: 7px;
+  width: 7px; height: 7px;
   border-radius: 50%;
   background: var(--muted);
   animation: bounce 1.2s infinite ease-in-out;
 }
 
-.bubble--typing span:nth-child(2) { animation-delay: 0.2s; }
-.bubble--typing span:nth-child(3) { animation-delay: 0.4s; }
+.dots span:nth-child(2) { animation-delay: 0.2s; }
+.dots span:nth-child(3) { animation-delay: 0.4s; }
 
 @keyframes bounce {
   0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }

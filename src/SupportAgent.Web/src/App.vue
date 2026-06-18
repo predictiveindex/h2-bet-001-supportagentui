@@ -10,7 +10,7 @@
     </nav>
 
     <!-- Chat window -->
-    <ChatWindow :messages="messages" :loading="loading" />
+    <ChatWindow :exchanges="exchanges" :loading="loading" @vote="handleVote" />
 
     <!-- Input -->
     <ChatInput @send="sendMessage" :disabled="loading" />
@@ -22,19 +22,30 @@ import { ref } from 'vue'
 import ChatWindow from './components/ChatWindow.vue'
 import ChatInput from './components/ChatInput.vue'
 
-const messages = ref([])
+const exchanges = ref([])
 const loading = ref(false)
-const previousResponseId = ref(null)
+const previousResponseIdA = ref(null)
+const previousResponseIdB = ref(null)
 
 function newChat() {
-  messages.value = []
-  previousResponseId.value = null
+  exchanges.value = []
+  previousResponseIdA.value = null
+  previousResponseIdB.value = null
 }
 
 async function sendMessage(text) {
   if (!text.trim() || loading.value) return
 
-  messages.value.push({ role: 'user', content: text })
+  const exchange = {
+    user: text,
+    replyA: null,
+    responseIdA: null,
+    replyB: null,
+    responseIdB: null,
+    voted: null,
+    rateLimited: false,
+  }
+  exchanges.value.push(exchange)
   loading.value = true
 
   try {
@@ -43,21 +54,57 @@ async function sendMessage(text) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: text,
-        previousResponseId: previousResponseId.value,
+        previousResponseIdA: previousResponseIdA.value,
+        previousResponseIdB: previousResponseIdB.value,
       }),
     })
 
+    if (res.status === 429) {
+      exchange.rateLimited = true
+      return
+    }
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
+
     const data = await res.json()
-    previousResponseId.value = data.responseId
-    messages.value.push({ role: 'assistant', content: data.reply })
-  } catch (err) {
-    messages.value.push({
-      role: 'assistant',
-      content: 'Sorry, something went wrong. Please try again.',
-    })
+    exchange.replyA = data.replyA
+    exchange.responseIdA = data.responseIdA
+    exchange.replyB = data.replyB
+    exchange.responseIdB = data.responseIdB
+    previousResponseIdA.value = data.responseIdA
+    previousResponseIdB.value = data.responseIdB
+  } catch {
+    exchange.replyA = 'Sorry, something went wrong. Please try again.'
+    exchange.replyB = 'Sorry, something went wrong. Please try again.'
   } finally {
     loading.value = false
+  }
+}
+
+async function handleVote(index, choice) {
+  const exchange = exchanges.value[index]
+  if (!exchange || exchange.voted) return
+  exchange.voted = choice
+
+  // Build full conversation histories up to this point
+  const historyA = []
+  const historyB = []
+  for (let i = 0; i <= index; i++) {
+    const ex = exchanges.value[i]
+    if (!ex.replyA) continue
+    historyA.push({ role: 'user', content: ex.user })
+    historyA.push({ role: 'assistant', content: ex.replyA })
+    historyB.push({ role: 'user', content: ex.user })
+    historyB.push({ role: 'assistant', content: ex.replyB })
+  }
+
+  try {
+    await fetch('/api/vote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ votedFor: choice, historyA, historyB }),
+    })
+  } catch {
+    // Vote recording failure is silent — don't disrupt the UX
   }
 }
 </script>

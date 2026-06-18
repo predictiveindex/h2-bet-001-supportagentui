@@ -19,6 +19,9 @@ param identityResourceId string
 @description('Client ID of the user-assigned managed identity (passed as AZURE_CLIENT_ID env var)')
 param identityClientId string
 
+@description('Azure Table Storage account URL (e.g. https://sth2validatedev.table.core.windows.net)')
+param storageAccountUrl string
+
 // ── Container App ─────────────────────────────────────────────────────────────
 
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
@@ -60,6 +63,10 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
               name: 'AZURE_CLIENT_ID'
               value: identityClientId
             }
+            {
+              name: 'AZURE_STORAGE_ACCOUNT_URL'
+              value: storageAccountUrl
+            }
           ]
         }
       ]
@@ -72,5 +79,3 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
 }
 
 output fqdn string = 'https://${containerApp.properties.configuration.ingress.fqdn}'
-
-
