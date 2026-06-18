@@ -10,7 +10,7 @@
         </svg>
       </div>
       <p class="empty-title">I am the Hatchwork company assistant — how can I help you today?</p>
-      <p class="empty-sub">I can help you with onboarding, HR, pay and benefits, product training and security training.</p>
+      <p class="empty-sub">Tell me what I can help you with and I am happy to do so.</p>
     </div>
 
     <!-- Exchanges -->
