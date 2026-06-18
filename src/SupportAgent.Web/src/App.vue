@@ -2,7 +2,10 @@
   <div class="app-layout">
     <!-- Nav -->
     <nav class="nav">
-      <span class="brand">VentureLabs &ndash; Behavioral Intelligence Powered <span class="accent">SupportAgent Demo</span></span>
+      <span class="brand">
+        <img src="/h2-logo.png" class="brand-logo" alt="H2 logo" />
+        VentureLabs &ndash; Behavioral Intelligence Powered <span class="accent">SupportAgent</span>
+      </span>
       <button class="btn-new-chat" @click="newChat" :disabled="loading">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 1v12M1 7h12"/></svg>
         New Chat
@@ -137,6 +140,16 @@ async function handleVote(index, choice) {
   font-weight: 700;
   letter-spacing: -0.03em;
   color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-logo {
+  height: 36px;
+  width: 36px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .accent {
