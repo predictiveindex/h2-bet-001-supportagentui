@@ -4,7 +4,7 @@
     <nav class="nav">
       <span class="brand">
         <img src="/h2-logo.png" class="brand-logo" alt="H2 logo" />
-        VentureLabs &ndash; Behavioral Intelligence Powered <span class="accent">SupportAgent</span>
+        <span class="brand-venture">Venture</span><span class="accent">Labs</span> &ndash; Behavioral Intelligence Powered <span class="accent">SupportAgent</span>
       </span>
       <button class="btn-new-chat" @click="newChat" :disabled="loading">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 1v12M1 7h12"/></svg>
@@ -150,6 +150,10 @@ async function handleVote(index, choice) {
   width: 36px;
   object-fit: contain;
   flex-shrink: 0;
+}
+
+.brand-venture {
+  color: #ffffff;
 }
 
 .accent {
