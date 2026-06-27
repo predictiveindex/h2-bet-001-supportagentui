@@ -9,8 +9,12 @@
           <path d="M12 20h16M20 12l8 8-8 8" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
-      <p class="empty-title">I am the Hatchwork company assistant — how can I help you today?</p>
-      <p class="empty-sub">Tell me what I can help you with and I am happy to do so.</p>
+      <p class="empty-title">Hi, I'm FinEdge Support. What can I help you with?</p>
+      <div class="example-prompts">
+        <button class="example-btn" @click="$emit('example', 'Why did my budgeting coach move to premium?')">Why did my budgeting coach move to premium?</button>
+        <button class="example-btn" @click="$emit('example', 'How do I cancel my plan?')">How do I cancel my plan?</button>
+        <button class="example-btn" @click="$emit('example', 'What\'s included in premium?')">What's included in premium?</button>
+      </div>
     </div>
 
     <!-- Exchanges -->
@@ -59,7 +63,7 @@ const props = defineProps({
   loading: { type: Boolean, default: false },
 })
 
-defineEmits(['vote'])
+defineEmits(['vote', 'example'])
 
 const windowEl = ref(null)
 
@@ -115,9 +119,33 @@ watch(() => props.loading, scrollToBottom)
   position: relative; z-index: 1;
 }
 
-.empty-sub {
-  font-size: 14px; color: var(--muted);
-  max-width: 360px; position: relative; z-index: 1;
+.example-prompts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 20px;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 400px;
+}
+
+.example-btn {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 10px 16px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.18s, color 0.18s;
+}
+
+.example-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
 }
 
 /* ── Messages ────────────────────────── */

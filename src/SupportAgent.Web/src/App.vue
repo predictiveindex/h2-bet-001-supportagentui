@@ -4,7 +4,7 @@
     <nav class="nav">
       <span class="brand">
         <img src="/h2-logo.png" class="brand-logo" alt="H2 logo" />
-        <span class="brand-name"><span class="brand-venture">Venture</span><span class="accent">Labs</span></span> &ndash; Behavioral Intelligence Powered <span class="accent">SupportAgent</span>
+        <span class="brand-name"><span class="brand-venture">Venture</span><span class="accent">Labs</span></span> - Behavioral Intelligence Powered <span class="accent">FinEdge Support</span>
       </span>
       <button class="btn-new-chat" @click="newChat" :disabled="loading">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 1v12M1 7h12"/></svg>
@@ -13,7 +13,7 @@
     </nav>
 
     <!-- Chat window -->
-    <ChatWindow :exchanges="exchanges" :loading="loading" @vote="handleVote" />
+    <ChatWindow :exchanges="exchanges" :loading="loading" @vote="handleVote" @example="sendMessage" />
 
     <!-- Input -->
     <ChatInput @send="sendMessage" :disabled="loading" />
