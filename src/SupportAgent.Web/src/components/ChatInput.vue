@@ -5,7 +5,7 @@
         ref="textareaEl"
         v-model="text"
         class="input"
-        placeholder="I'm experiencing a bug in the software."
+        placeholder="Tell us what's going on…"
         :disabled="disabled"
         rows="1"
         @keydown.enter.exact.prevent="submit"

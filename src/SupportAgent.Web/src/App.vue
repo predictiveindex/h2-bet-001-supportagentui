@@ -13,7 +13,7 @@
     </nav>
 
     <!-- Chat window -->
-    <ChatWindow :exchanges="exchanges" :loading="loading" @vote="handleVote" @example="sendMessage" />
+    <ChatWindow :exchanges="exchanges" :loading="loading" @vote="handleVote" />
 
     <!-- Input -->
     <ChatInput @send="sendMessage" :disabled="loading" />

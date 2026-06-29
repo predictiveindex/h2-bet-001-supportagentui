@@ -10,11 +10,7 @@
         </svg>
       </div>
       <p class="empty-title">Hi, I'm FinEdge Support. What can I help you with?</p>
-      <div class="example-prompts">
-        <button class="example-btn" @click="$emit('example', 'What\'s the difference between free and premium?')">What's the difference between free and premium?</button>
-        <button class="example-btn" @click="$emit('example', 'How do I cancel my plan?')">How do I cancel my plan?</button>
-        <button class="example-btn" @click="$emit('example', 'What\'s included in premium?')">What's included in premium?</button>
-      </div>
+      <p class="empty-sub">How can we help you today?</p>
     </div>
 
     <!-- Exchanges -->
@@ -63,7 +59,7 @@ const props = defineProps({
   loading: { type: Boolean, default: false },
 })
 
-defineEmits(['vote', 'example'])
+defineEmits(['vote'])
 
 const windowEl = ref(null)
 
@@ -117,35 +113,6 @@ watch(() => props.loading, scrollToBottom)
   font-size: 22px; font-weight: 700;
   color: var(--text); margin-bottom: 8px;
   position: relative; z-index: 1;
-}
-
-.example-prompts {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 20px;
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: 400px;
-}
-
-.example-btn {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  color: var(--muted);
-  font-family: inherit;
-  font-size: 13px;
-  padding: 10px 16px;
-  cursor: pointer;
-  text-align: left;
-  transition: border-color 0.18s, color 0.18s;
-}
-
-.example-btn:hover {
-  border-color: var(--accent);
-  color: var(--text);
 }
 
 /* ── Messages ────────────────────────── */
