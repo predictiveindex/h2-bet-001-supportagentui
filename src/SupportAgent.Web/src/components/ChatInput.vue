@@ -5,7 +5,7 @@
         ref="textareaEl"
         v-model="text"
         class="input"
-        placeholder="Ask about Budgeting Coach, pricing, or your account…"
+        placeholder="I'm experiencing a bug in the software."
         :disabled="disabled"
         rows="1"
         @keydown.enter.exact.prevent="submit"

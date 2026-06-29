@@ -11,7 +11,7 @@
       </div>
       <p class="empty-title">Hi, I'm FinEdge Support. What can I help you with?</p>
       <div class="example-prompts">
-        <button class="example-btn" @click="$emit('example', 'Why did my budgeting coach move to premium?')">Why did my budgeting coach move to premium?</button>
+        <button class="example-btn" @click="$emit('example', 'What\'s the difference between free and premium?')">What's the difference between free and premium?</button>
         <button class="example-btn" @click="$emit('example', 'How do I cancel my plan?')">How do I cancel my plan?</button>
         <button class="example-btn" @click="$emit('example', 'What\'s included in premium?')">What's included in premium?</button>
       </div>
